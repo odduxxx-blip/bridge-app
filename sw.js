@@ -1,0 +1,6 @@
+/* BRIDGE 3.0 demo PWA. Do not cache API or credential endpoints. */
+const CACHE='bridge-app-demo-v3-20261118';
+const SHELL=['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png','./assets/bridge_selected_semicircle.png','./assets/bridge_illustration_1.webp','./assets/bridge_illustration_2.webp','./assets/bridge_illustration_3.webp'];
+self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));self.skipWaiting()});
+self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('bridge-app-demo-')&&k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim()});
+self.addEventListener('fetch',event=>{const req=event.request;if(req.method!=='GET'||new URL(req.url).origin!==location.origin)return;event.respondWith((async()=>{try{const response=await fetch(req);if(response.ok&&!new URL(req.url).pathname.endsWith('/admin.html')){const cache=await caches.open(CACHE);cache.put(req,response.clone())}return response}catch(e){const cached=await caches.match(req,{ignoreSearch:req.mode==='navigate'});if(cached)return cached;if(req.mode==='navigate')return (await caches.match('./index.html'))||Response.error();throw e}})())});
